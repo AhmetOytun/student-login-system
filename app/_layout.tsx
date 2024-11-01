@@ -1,37 +1,50 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
+import { Stack } from "expo-router";
+import * as NavigationBar from "expo-navigation-bar";
+import { SplashScreen } from "expo-router";
+import { useEffect } from "react";
+import { useFonts } from "expo-font";
+import { Platform, View } from "react-native";
+import { AuthProvider } from "@/context/AuthProvider";
+/* prevent the splash screen from auto-hiding before the app is ready */
 SplashScreen.preventAutoHideAsync();
+/* set the navigation bar style for */
+if (Platform.OS === "android") {
+  /* this makes the navigation bar position fixed */
+  NavigationBar.setPositionAsync("absolute");
+  /* this makes the navigation bar transparent */
+  NavigationBar.setBackgroundColorAsync("#ffffff01");
+}
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  /* loading fonts */
+  const [loaded, error] = useFonts({
+    "Inter-Bold": require("@/assets/fonts/Inter-Bold.ttf"),
+    "Inter-Regular": require("@/assets/fonts/Inter-Regular.ttf"),
+    "Inter-Medium": require("@/assets/fonts/Inter-Medium.ttf"),
+    "Inter-SemiBold": require("@/assets/fonts/Inter-SemiBold.ttf"),
   });
 
   useEffect(() => {
-    if (loaded) {
+    if (loaded && !error) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, error]);
 
-  if (!loaded) {
-    return null;
+  /* show nothing until the fonts are loaded or when we get an error */
+  if (!loaded && !error) {
+    /* return a black bg when loading */
+    return <View className="bg-black w-full h-full">
+    </View>;
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-    </ThemeProvider>
+    <View className="flex-1 bg-black">
+    <AuthProvider>
+    <Stack screenOptions={{headerShown: false, animation:"fade"}}>
+      <Stack.Screen name="(auth)" />
+      <Stack.Screen name="index" />
+    </Stack>
+    </AuthProvider>
+    </View>
   );
 }
